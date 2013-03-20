@@ -1,0 +1,44 @@
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Description: Finds a strictly positive number                               *
+ *              that satisfies 13 out of the 15 conditions:                    *
+ *              - It is a multiple of 2, 3, 4, 5, 6, 7, 8, 9 and 10.           *
+ *              - It is smaller than 1000, 750, 550 and 500.                   *
+ *              - It is greater than 400 and 450.                              *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    int wrong;
+    /**
+     * Loop though range of numbers in multipules of six (which is multipule of
+     * both 2 and three).
+     */
+    for (int N = 6; N < 750; N += 6) {
+        wrong = 0;
+        
+        if(N > 500)
+            wrong++;
+        if(N > 550)
+            wrong++;
+        if(N < 400)
+            wrong++;
+        if(N < 450)
+            wrong++;
+
+        if((N % 5) != 0)
+            wrong++;
+        if((N % 7) != 0)
+            wrong++;
+        if((N % 8) != 0)
+            wrong++;
+        if((N % 9) != 0)
+            wrong++;
+        if((N % 10) != 0)
+            wrong++;
+        
+        if (wrong == 2)
+            printf("N = %d is a solution.\n", N);
+    }
+    return EXIT_SUCCESS;
+}
