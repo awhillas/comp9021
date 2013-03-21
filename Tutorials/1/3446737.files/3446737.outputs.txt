@@ -1,0 +1,112 @@
+TEST 1 BEGIN
+$ a.out 814974
+   6   3   6   3   3   6   6   3   6   6
+  does not contain three distinct numbers.
+
+TEST 1 END
+
+TEST 2 BEGIN
+$ a.out 1227592
+   1   0   1   1   0   0   1   0   0   1
+  does not contain three distinct numbers.
+
+TEST 2 END
+
+TEST 3 BEGIN
+$ a.out 190057075
+   6   6   6   6   6   6   6   6   6   6
+  does not contain three distinct numbers.
+
+TEST 3 END
+
+TEST 4 BEGIN
+$ a.out 10
+   0   3   1   2   5   6   0   8   8   7
+  has 2 as third smallest number.
+
+TEST 4 END
+
+TEST 5 BEGIN
+$ a.out 11
+   7   2   7   3   5   8   4   9   4   9
+  has 4 as third smallest number.
+
+TEST 5 END
+
+TEST 6 BEGIN
+$ a.out 12
+   4   1   3   1   8   0   8   0   0   1
+  has 3 as third smallest number.
+
+TEST 6 END
+
+TEST 7 BEGIN
+$ a.out 13
+   1   0   6   9   8   2   2   8   3   3
+  has 2 as third smallest number.
+
+TEST 7 END
+
+TEST 8 BEGIN
+$ a.out 14
+   8   9   2   0   1   7   6   9   9   5
+  has 2 as third smallest number.
+
+TEST 8 END
+
+TEST 9 BEGIN
+$ a.out 15
+   5   8   8   8   1   9   0   0   5   7
+  has 5 as third smallest number.
+
+TEST 9 END
+
+TEST 10 BEGIN
+$ a.out 16
+   2   0   4   9   4   1   4   8   8   6
+  has 2 as third smallest number.
+
+TEST 10 END
+
+TEST 11 BEGIN
+$ a.out 17
+   9   9   7   7   7   3   8   9   4   8
+  has 7 as third smallest number.
+
+TEST 11 END
+
+TEST 12 BEGIN
+$ a.out 18
+   6   8   3   8   7   5   2   0   0   0
+  has 3 as third smallest number.
+
+TEST 12 END
+
+TEST 13 BEGIN
+$ a.out 19
+   3   7   9   6   0   0   6   8   3   2
+  has 3 as third smallest number.
+
+TEST 13 END
+
+TEST 14 BEGIN
+$ a.out 20
+   0   6   5   7   0   2   0   9   9   4
+  has 4 as third smallest number.
+
+TEST 14 END
+
+TEST 15 BEGIN
+$ a.out 371
+   7   3   3   8   1   5   5   1   9   7
+  has 5 as third smallest number.
+
+TEST 15 END
+
+TEST 16 BEGIN
+$ a.out 21212
+   4   8   7   0   3   6   9   6   3   6
+  has 4 as third smallest number.
+
+TEST 16 END
+
