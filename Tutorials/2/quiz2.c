@@ -20,25 +20,24 @@ int max_distance_at_least_equal_to_in(int threshold, int set);
 int main(void) {
     int n1, n2, n3;
     int n[NUMBER_OF_SETS];
-    int distances[NUMBER_OF_SETS];
     printf("Enter a first number at most equal to 1023: ");
-    scanf("%d", &n[0]);
+    scanf("%d", &n1);
     printf("Enter a second number at most equal to 1023: ");
-    scanf("%d", &n[1]);
+    scanf("%d", &n2);
     printf("Enter a third number at most equal to 1023: ");
-    scanf("%d", &n[2]);
+    scanf("%d", &n3);
     printf("The largest distance between two consecutive digits in one of the sets\n");
-/*
+
     display_set_coded_by(n1);
     display_set_coded_by(n2);
     display_set_coded_by(n3);
-*/
-    for(int i = 0; i < NUMBER_OF_SETS; i++)
-        display_set_code_by(n[i]);
-    
     int max_distance = 0;
 
     /* ... REPLACE THIS COMMENT WITH YOUR CODE ... */
+    n[0] = n1;
+    n[1] = n2;
+    n[2] = n3;
+    
     for(int i = 0; i < NUMBER_OF_SETS; i++) {
         int distance = max_distance_at_least_equal_to_in(1, n[i]);
         if(distance > max_distance)
@@ -65,15 +64,29 @@ void display_set_coded_by(int n) {
 
 int max_distance_at_least_equal_to_in(int threshold, int n) {
     /* ... REPLACE THIS COMMENT WITH YOUR CODE ... */
+    if(n == 0) return 0;
+    
+    int first_digit = -1;
     int last_digit = -1;
-    int distance = 0;
+    int max_distance = 0;// max dist. between consecutive numbers
+
     for (int i = 0; i < 10; ++i)
         if (n & 1 << i) {
-            if (last_digit > -1)
-                printf(", %d", i);
-            else
-                distance = 10;
+            if (last_digit > -1) {
+                int gap = i - last_digit;
+                if(gap > max_distance)
+                    max_distance = gap;
+            }
+            else {
+                first_digit = i;
+            }
             last_digit = i;
         }
+
+    int end = 10 - last_digit + first_digit;
+    if(end > max_distance)
+        return end;
+
+    return max_distance;
 }
 
