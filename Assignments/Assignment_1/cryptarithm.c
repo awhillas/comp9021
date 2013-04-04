@@ -26,9 +26,10 @@ void copy_array(int [], int [], int);
 bool is_prime(int);
 
 int main(void) {
+    int one, two, seven, nine;
     for (int x = MIN_NINE; x < MAX_NINE; x++) {
         int digits[10] = {0};
-        int nine = x * x;
+        nine = x * x;
         // N
         
         int n = nine / 1000 % 10;
@@ -54,13 +55,13 @@ int main(void) {
         
         // O
 
-        for(int o = 1; o <= 9; ++o) {
+        int digits_o[10];
+        for(int o = 1; o <= 4; ++o) {
             // copy digits array
-            int digits_o[10];
             copy_array(digits, digits_o, 10);
 
-            int one = o * 100 + n * 10 + e;
-            int two = one + one;
+            one = o * 100 + n * 10 + e;
+            two = one + one;
             int t = two / 100 % 10;
             int w = two / 10 % 10;
             // Check the 'o' in 'two' equals the 'o' in 'one'
@@ -73,29 +74,27 @@ int main(void) {
                 continue;
             if(++digits_o[w] == 2)
                 continue;
-
-            // S
-
-            for(int s = 1; s < 10; ++s) {
+        
+            // S + V
+            // thanks to the indent limit we combine 2 loops into one here
+            // the first digit for 's' an the second for 'v'.
+            for(int sv = 10; sv < 99; ++sv) {
+                int s = sv / 10 % 10;
+                int v = sv % 10;
                 // copy digits array
-                int digits_o_s[10];
-                copy_array(digits_o, digits_o_s, 10);
+                int digits_o_sv[10];
+                copy_array(digits_o, digits_o_sv, 10);
                 
-                if(++digits_o_s[s] == 2)
+                if(++digits_o_sv[s] == 2)
                     continue;
             
-                // V
+                if(++digits_o_sv[v] == 2)
+                    continue;
 
-                for(int v = 0; v < 10; ++v) {
-                    int digits_o_s_v[10];
-                    copy_array(digits_o_s, digits_o_s_v, 10);
-                    if(++digits_o_s_v[v] == 2)
-                        continue;
-
-                    int seven = s * 10000 + e * 1000 + v * 100 + e * 10 + n;
-                    if(is_prime(seven)) 
-                        printf("one = %d, two = %d, seven = %d and nine = %d is a solution\n", one, two, seven, nine);
-                }
+                seven = s * 10000 + e * 1000 + v * 100 + e * 10 + n;
+                if(is_prime(seven)) 
+                    printf("one = %d, two = %d, seven = %d and nine = %d is a solution\n", one, two, seven, nine);
+                
             }
         }
     }
