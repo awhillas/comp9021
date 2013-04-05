@@ -7,7 +7,7 @@
  *              - four is a perfect square, and                                *
  *              - eight is a perfect cube.                                     *
  *                                                                             *
- * Written by Eric Martin for COMP9021                                         *
+ * Written by Alexander Whillas (z3446737)for COMP9021                         *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <math.h>
