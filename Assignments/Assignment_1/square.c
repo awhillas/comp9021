@@ -51,6 +51,12 @@ int main(void) {
                         l += MIN_NINE_DIGIT / 10;
                         continue;
                     }
+                    // Check 2 right most digits
+                    if(!is_sq(get_digit(l, 2)))
+                        continue;
+                    if(!is_sq(get_digit(l, 1)))
+                        continue;
+
                     // Check 1st, 2 digit vertical
                     int vertical = get_digit(k, 5) * 10 + get_digit(l, 7);
                     if(!is_sq(vertical)) {
@@ -78,12 +84,6 @@ int main(void) {
                         continue;
                     }
 
-                    // Check 2 right most digits
-                    if(!is_sq(get_digit(l, 2)))
-                        continue;
-                    if(!is_sq(get_digit(l, 1)))
-                        continue;
-
                     print_solution(i, j, k, l);
                 }
             }
@@ -96,11 +96,9 @@ int main(void) {
  * Is the number n a perfect square?
  */ 
 bool is_sq(int n) {
-    int m;
-    float p;
+    int p;
     p = sqrt(n);
-    m = p;
-    return p == m;
+    return p * p == n;
 }
 
 /**
