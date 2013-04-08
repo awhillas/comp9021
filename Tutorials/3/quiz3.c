@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * Description: 
+ * Description:                                                                * 
  *                                                                             *
- * Written by *** for COMP9021                                                 *
+ * Written by Alexander Whillas (z3446737) for COMP9021                        *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #define NB_OF_BITS_FOR_NUMBER 32
@@ -33,7 +33,25 @@ int main(void) {
     if (mantissa < 0 || mantissa >= 1)
         complain();
     int bits[NB_OF_BITS_FOR_NUMBER] = {0};
+    
+    
+    
     /* ... REPLACE THIS COMMENT WITH YOUR CODE ... */
+    if(sign == '-')
+        bits[0] = 1;
+    
+    exponent += 127;
+    for(int i = 0; i < 8; i++)
+        if(exponent & 1 << i)
+            bits[8-i] = 1;
+    
+    for(int i = 0; i < NB_OF_BITS_FOR_DECIMAL_PART; i++) {
+        if(mantissa - 1 / pow(2, i) >= 0) {
+            bits[i + 8] = 1;
+            mantissa -= 1 / pow(2, i);
+        }
+    }
+    
     printf("The %d bits of %c2^%d x %.7f, with bytes in their \"natural\" order, are:\n    ",
            NB_OF_BITS_FOR_NUMBER, sign, exponent, 1 + mantissa);
     for (int i = 0; i < NB_OF_BITS_FOR_NUMBER; ++i) {
@@ -49,5 +67,3 @@ void complain(void) {
     printf("You did not provide me with what I asked for!\n");
     exit(EXIT_FAILURE);
 }
-
-    
