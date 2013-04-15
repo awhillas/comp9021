@@ -9,87 +9,93 @@
 #include <math.h>
 #include <stdbool.h>
 
-#define MIN_ONE_DIGIT 1
-#define MAX_ONE_DIGIT 10
+#define NUMBER_OF_NUMBERS = 9
 
-#define MIN_THREE_DIGIT 100
-#define MAX_THREE_DIGIT 999
-
-#define MIN_FIVE_DIGIT 10000
-#define MAX_FIVE_DIGIT 99999
-
-#define MIN_NINE_DIGIT 100000000
-#define MAX_NINE_DIGIT 999999999
-
-void print_solution(int, int, int, int); 
+void print_solution(int []); 
 int get_digit(int , int);
+bool check_sqs(int []);
 bool is_sq(int);
+void rotate(int [], int []);
+int getn(int, int);
 
 int main(void) {
-    for(int i = MIN_ONE_DIGIT; i < MAX_ONE_DIGIT; ++i) {
-        if(!is_sq(i))
-           continue;
+    // Hold the most relavent answer (rotated 90 counter clockwise)
+    int answer[9] = {0};
 
-        for(int j = MIN_THREE_DIGIT; j < MAX_THREE_DIGIT; ++j) {
-            if (!is_sq(j))
-                continue;
-        
-            for(int k = MIN_FIVE_DIGIT; k < MAX_FIVE_DIGIT; ++k) {
-                if (!is_sq(k))
-                    continue;
-                
-                for(int l = MIN_NINE_DIGIT; l < MAX_NINE_DIGIT; ++l) {
-                    if (!is_sq(l))
-                        continue;
-                    
-                    // Check 2 left most digits and save ourselves some work.
-                    if(!is_sq(get_digit(l, 9))) {
-                        l += MIN_NINE_DIGIT;
-                        continue;
-                    }
-                    if(!is_sq(get_digit(l, 8))) {
-                        l += MIN_NINE_DIGIT / 10;
-                        continue;
-                    }
-                    // Check 2 right most digits
-                    if(!is_sq(get_digit(l, 2)))
-                        continue;
-                    if(!is_sq(get_digit(l, 1)))
-                        continue;
+    // Max/min. square root value to loop though
+    int const max_sqr[9] = {3, 3, 9, 31, 99, 31, 9, 3, 3};
+    int const min_sqr[9] = {0, 0, 0, 0,  32, 10, 4, 3, 3};
+    int count[9] = {1};
 
-                    // Check 1st, 2 digit vertical
-                    int vertical = get_digit(k, 5) * 10 + get_digit(l, 7);
-                    if(!is_sq(vertical)) {
-                        continue;
-                    }
-                    // check 1st 3 digit vertical
-                    vertical = get_digit(j, 3) * 100 + get_digit(k, 4) * 10 + get_digit(l, 6);
-                    if(!is_sq(vertical)) {
-                        continue;
-                    }
-
-                    // Center vertical
-                    vertical = i * 1000 + get_digit(j, 2) * 100 + get_digit(k, 3) * 10 + get_digit(l, 5);
-                    if(!is_sq(vertical)) {
-                        continue;
-                    }
-                    // check 2nd 3 digit vertical
-                    vertical = get_digit(j, 1) * 100 + get_digit(k, 2) * 10 + get_digit(l, 4);
-                    if(!is_sq(vertical) || get_digit(j, 1) == 0) {
-                        continue;
-                    }
-                    // Check 2nd, 2 digit vertical
-                    vertical = get_digit(k, 1) * 10 + get_digit(l, 3);
-                    if(!is_sq(vertical) || get_digit(k, 1) == 0) {
-                        continue;
-                    }
-
-                    print_solution(i, j, k, l);
-                }
-            }
+    int level = 0;
+    do {
+//printf("%d\n", level);        
+        if (count[level] > max_sqr[level]) {
+            count[level] = min_sqr[level]; // start at largest square
+            level--;
+            continue;   // return up one level
         }
-    }
+        else {
+            answer[level] = count[level] * count[level];
+            count[level]++;
+        }
+        if (level < 8) {
+            level++;
+        }
+        else if(check_sqs(answer)) {
+  
+//for(int i = 0; i < 9; ++i) printf("%d\n", answer[i]); printf("\n");
+            print_solution(answer);
+        }
+    } while (level > -1);
+    
     return EXIT_SUCCESS;
+}
+
+/**
+ * Check the given solution is valid or not.
+ * We know they must be squares vertically, just have to check horizontally
+ */ 
+bool check_sqs(int in[]) {
+    int rotated[4] = {0};
+//for(int i = 0; i < 9; ++i) printf("%d\n", in[i]); printf("\n");
+    rotate(in, rotated);
+//print_solution(in);printf("\n");
+for(int i = 0; i < 4; ++i) printf("%d\n", rotated[i]); printf("\n");
+    for (int i = 0; i < 4; i++)
+        if(!is_sq(rotated[i]) || rotated[i] == 0)
+            return false;
+    
+    return true;
+}
+
+/**
+ * Since we are working in -90 degrees from the desired output we need to rotate the answer
+ * for checking and printing.
+ */
+void rotate(int in[9], int out[4]) {
+    out[0] =  getn(in[4], 4);
+    
+    out[1] =  getn(in[5], 3) * 100 
+            + getn(in[4], 3) * 10 
+            + getn(in[3], 3);
+
+    out[2] =  getn(in[6], 2) * 10000 
+            + getn(in[5], 2) * 1000 
+            + getn(in[4], 2) * 100 
+            + getn(in[3], 2) * 10 
+            + getn(in[2], 2);
+    
+    out[3] =  in[8]          * 100000000 
+            + in[7]          * 10000000
+            + getn(in[6], 1) * 1000000 
+            + getn(in[5], 1) * 100000 
+            + getn(in[4], 1) * 10000 
+            + getn(in[3], 1) * 1000 
+            + getn(in[2], 1) * 100
+            + in[1]          * 10
+            + in[0];
+//for(int i = 0; i < 4; ++i) printf("%d\n", out[i]); printf("rotate\n");
 }
 
 /**
@@ -104,16 +110,18 @@ bool is_sq(int n) {
 /**
  * return the n'th digit of the number
  */
-int get_digit(int number, int n) {
+int getn(int number, int n) {
     return number / (int) pow(10, n - 1) % 10;
 }
 
 /**
  * Print a solution in the perscribed output format
  */
-void print_solution(int one, int three, int five, int nine) {
-    printf("%5d\n", one);
-    printf("%6d\n", three);
-    printf("%7d\n", five);
-    printf("%d\n\n", nine);
+void print_solution(int answer[]) {
+    int rotated[4] = {-1};
+    rotate(answer, rotated);
+    printf("%5d\n", rotated[0]);
+    printf("%6d\n", rotated[1]);
+    printf("%7d\n", rotated[2]);
+    printf("%d\n\n", rotated[3]);
 }
