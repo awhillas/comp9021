@@ -29,7 +29,6 @@ int main(void) {
 
     int level = 0;
     do {
-//printf("%d\n", level);        
         if (count[level] > max_sqr[level]) {
             count[level] = min_sqr[level]; // start at largest square
             level--;
@@ -43,8 +42,6 @@ int main(void) {
             level++;
         }
         else if(check_sqs(answer)) {
-  
-//for(int i = 0; i < 9; ++i) printf("%d\n", answer[i]); printf("\n");
             print_solution(answer);
         }
     } while (level > -1);
@@ -58,10 +55,7 @@ int main(void) {
  */ 
 bool check_sqs(int in[]) {
     int rotated[4] = {0};
-//for(int i = 0; i < 9; ++i) printf("%d\n", in[i]); printf("\n");
     rotate(in, rotated);
-//print_solution(in);printf("\n");
-for(int i = 0; i < 4; ++i) printf("%d\n", rotated[i]); printf("\n");
     for (int i = 0; i < 4; i++)
         if(!is_sq(rotated[i]) || rotated[i] == 0)
             return false;
@@ -95,7 +89,6 @@ void rotate(int in[9], int out[4]) {
             + getn(in[2], 1) * 100
             + in[1]          * 10
             + in[0];
-//for(int i = 0; i < 4; ++i) printf("%d\n", out[i]); printf("rotate\n");
 }
 
 /**
