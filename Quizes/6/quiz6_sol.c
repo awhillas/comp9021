@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Description: 
  *                                                                             *
- * Written by *** for COMP9021                                                 *
+ * Written by Eric Martin for COMP9021                                         *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdbool.h>
@@ -16,8 +16,6 @@ void display_grid(void);
 /* Returns the size of the largest connected region which has a checkers-like structure,
  * starting the exploration from the point of coordinates (i, j). */
 int explore_from(int i, int j);
-
-int count_checker_squares(int, int, bool);
 
 int main(int argc, char **argv) {
     /* We run the program with two command line arguments. */
@@ -39,16 +37,13 @@ int main(int argc, char **argv) {
     puts("Here is the grid that has been generated:\n");
     display_grid();
     int max_size_of_region_with_checkers_structure = 0;
-    
-    /* REPLACE WITH COMMENT WITH YOUR CODE */
-    int last_area_size = 0;
-    for(int i = 0; i < DIM; ++i)
-        for(int j = 0; j < DIM; ++j) {
-            last_area_size = explore_from(i, j);
-            if (last_area_size > max_size_of_region_with_checkers_structure)
-                max_size_of_region_with_checkers_structure = last_area_size;
-        }
-
+    for (int i = 0; i < DIM; ++i)
+        for (int j = 0; j < DIM; ++j)
+            if (grid[i][j] < 2) {
+                int size = explore_from(i, j);
+                if (size > max_size_of_region_with_checkers_structure)
+                    max_size_of_region_with_checkers_structure = size;
+            }
     printf("The size of the largest area with a checkers structure is %d\n",
            max_size_of_region_with_checkers_structure);    
     return EXIT_SUCCESS;
@@ -65,21 +60,21 @@ void display_grid(void) {
 }
 
 int explore_from(int i, int j) {
-    /* REPLACE WITH COMMENT WITH YOUR CODE */
-    return count_checker_squares(i, j, !grid[i][j]);
+    int color = grid[i][j];
+    grid[i][j] += 2;
+    int area = 1;
+    if (i && grid[i - 1][j] == 1 - color)
+        area += explore_from(i - 1, j);
+    if (i < DIM - 1 && grid[i + 1][j] == 1 - color)
+        area += explore_from(i + 1, j);
+    if (j && grid[i][j - 1] == 1 - color)
+        area += explore_from(i, j - 1);
+    if (j < DIM - 1 && grid[i][j + 1] == 1 - color)
+        area += explore_from(i, j + 1);
+    return area;
 }
 
-int count_checker_squares(int x, int y, bool last) {
-    int count = 0;
-    bool this = grid[x][y];
-    
-    if (this == last)
-        return 0;
 
-    if(x + 1 <= DIM)
-        count += count_checker_squares(++x, y, this);
-    if(y + 1 <= DIM)
-        count += count_checker_squares(x, ++y, this);
-    
-    return ++count;
-}
+
+            
+
