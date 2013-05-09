@@ -1,5 +1,7 @@
 # Temp files
 *.c~
+*.aux
+*.dSYM
 
 # Object files
 *.o
