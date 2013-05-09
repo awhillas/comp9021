@@ -103,7 +103,7 @@ void latex_table(int);
 void latex_footer(void);
 
 void domain_diminution(void);
-unsigned diff_all(int, int, int, int); 
+unsigned get_numbers(int, int, int, int); 
 void copy_tally(int [], int []);
 
 int main(int argc, char **argv) {
@@ -333,10 +333,13 @@ void domain_diminution() {
                 continue;
             }
             unsigned domain = 0;
-            domain |= diff_all(r, r + 1, 0, RANGE);
-            domain |= diff_all(0, RANGE, c, c + 1);
-            domain |= diff_all(r / BOX_SIZE, r / BOX_SIZE + BOX_SIZE, c / BOX_SIZE, c / BOX_SIZE + BOX_SIZE);
-            
+            domain |= get_numbers(r, r + 1, 0, RANGE);
+            domain |= get_numbers(0, RANGE, c, c + 1);
+            int row_start = r / BOX_SIZE * BOX_SIZE;
+            int col_start = c / BOX_SIZE * BOX_SIZE;
+            domain |= get_numbers(row_start, row_start + BOX_SIZE, col_start, col_start + BOX_SIZE);
+            // Inver the result as the domain marks the avaiable number not the 
+            // unavaiable.
             grid[r][c][DOMAIN] = ~domain;
         }
 }
@@ -349,10 +352,9 @@ void insert(int row, int col, int number) {
 }
 
 /**
- * Checks the allDiff constraint in the given region of the grid and sets
- * the bit in the returned bitarray (unsigned int).
+ * Gets the numbers in the given region.
  */
-unsigned diff_all(int row_start, int row_end, int col_start, int col_end) {
+unsigned get_numbers(int row_start, int row_end, int col_start, int col_end) {
     unsigned domain = 0;
     for (int r = row_start; r < row_end; ++r)
         for (int c = col_start; c < col_end; ++c) {
