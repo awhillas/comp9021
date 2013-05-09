@@ -75,7 +75,7 @@ void print_grid(void);
 /* ADD FUNCTION PROTOTYPES AND GLOBAL VARIABLES */
 
 // Track square solutions onw for VALUE and one for DOMAIN.
-unsigned int grid[RANGE][RANGE][2];
+unsigned grid[RANGE][RANGE][2];
 // Tally of rows and columns, with the 1st element the count of numbers in that 
 // row/column and then the actual numbers following that. For quick refence. The
 // accounting() function fills in (updates) these arrays.
@@ -93,8 +93,8 @@ void update(int, int, int);
 bool in_tally(int, int []);
 void insert(int, int, int); 
 
-unsigned int count_bits(unsigned int n);
-int bit_to_number(unsigned int);
+unsigned count_bits(unsigned n);
+int bit_to_number(unsigned);
 
 // LaTeX related output...
 void latex(int);
@@ -191,7 +191,7 @@ bool looks_ok(void) {
     bool columns[RANGE][RANGE + 1] = {{0}};
     for (int r = 0; r < RANGE; ++r) // row
         for (int c = 0; c < RANGE; ++c) { // column
-            unsigned int number = grid[r][c][VALUE];
+            unsigned number = grid[r][c][VALUE];
             if (number == 0)
                 continue;
             if(rows[r][number] || columns[c][number]) {
@@ -208,7 +208,7 @@ bool looks_ok(void) {
             bool box[RANGE + 1] = {0};
             for (int r = i * BOX_SIZE; r < i * BOX_SIZE + BOX_SIZE; ++r) // row
                 for (int c = j * BOX_SIZE; c < j * BOX_SIZE + BOX_SIZE; ++c) { // column
-                    unsigned int number = grid[r][c][VALUE];
+                    unsigned number = grid[r][c][VALUE];
                     if (number == 0)
                         continue;
                     if(box[number]) {
@@ -272,57 +272,60 @@ bool in_tally(int number, int tally[]) {
 /**
  * Forced numbers should have only one cell for that number in the row/column or box
  */
-void force(){
+void force() {
+    bool found_forced_cells = false;
     domain_diminution();
     for (int r = 0; r < RANGE; ++r)
         for (int c = 0; c < RANGE; ++c) {
-            // collected domain for row, column & box except the current cell
-            unsigned int check = 0; 
-            // Add row domains
-            for (int i = 0; i < RANGE; ++i)
-                if(i != r) 
-                    check |= grid[r][i][DOMAIN]; 
-            // add column domains
-            for (int j = 0; j < RANGE; ++j)
-                if(j != c)
-                    check |= grid[j][c][DOMAIN]; // check column
+            // collected domain for current box except for the current cell
+            unsigned check = 0; 
             // add box domains
-            for (int i = r / BOX_SIZE; i < r / BOX_SIZE + BOX_SIZE; ++i)
-                for (int j = c / BOX_SIZE; j < c / BOX_SIZE + BOX_SIZE; ++j) 
-                    if(i != r && j != c)
+            int row_start = r / BOX_SIZE * BOX_SIZE;
+            int col_start = c / BOX_SIZE * BOX_SIZE;
+            for (int i = row_start; i < row_start + BOX_SIZE; ++i)
+                for (int j = col_start; j < col_start + BOX_SIZE; ++j)
+                    if(i != r || j != c)
                         check |= grid[i][j][DOMAIN];
             // Subtract check domain from cell_domain
-            unsigned int diff = grid[r][c][DOMAIN] & !check;
-            if (count_bits(diff) == 1)
+            unsigned diff = grid[r][c][DOMAIN] & ~check;
+            if (count_bits(diff) == 1) {
+                found_forced_cells = true;
                 insert(r, c, bit_to_number(diff));
-
+            }
         }
+    if(found_forced_cells)
+        force();
 }
-
+/**
+ * Insert a new number and update the tallys.
+ */
+void insert(int row, int col, int number) {
+    grid[row][col][VALUE] = number;
+}
 /**
  * Counts the number of bits in a int
  */
-unsigned int count_bits(unsigned int n) {
-    unsigned int count = 0;
+unsigned count_bits(unsigned n) {
+    unsigned count = 0;
     while(n) {
         count += n & 1;
         n >>= 1;
     }
     return count;
 }
-
 /**
  * Takes the highest bit and converts it to an int
  */
-int bit_to_number(unsigned int n) {
+int bit_to_number(unsigned n) {
     int count = 0;
     while(n >>= 1)
         count++;
-    return count;
+    return count + 1;
 }
 
 /**
  * Reduce the domains of each cell with constraint checking.
+ * Each domain is refreshed.
  */
 void domain_diminution() {
     // Check the row and column arcs
@@ -343,14 +346,6 @@ void domain_diminution() {
             grid[r][c][DOMAIN] = ~domain;
         }
 }
-
-/**
- * Insert a new number and update the tallys.
- */
-void insert(int row, int col, int number) {
-    grid[row][col][VALUE] = number;
-}
-
 /**
  * Gets the numbers in the given region.
  */
