@@ -88,9 +88,8 @@ void mark(void);
 void work(void);
 
 // Row/Column tally management functions...
-void accounting(void);
-void update(int, int, int);
-bool in_tally(int, int []);
+void tally_accounting(void);
+void update_tallys(int, int);
 void insert(int, int, int); 
 
 unsigned count_bits(unsigned n);
@@ -104,7 +103,6 @@ void latex_footer(void);
 
 void domain_diminution(void);
 unsigned get_numbers(int, int, int, int); 
-void copy_tally(int [], int []);
 
 int main(int argc, char **argv) {
     if (argc > 2 || (argc == 2 &&
@@ -125,15 +123,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < RANGE; ++i)
         for (int j = 0; j < RANGE; ++j)
             grid[i][j][DOMAIN] = !0;
-    /*
-    int blank[RANGE + 1] = {0};
-    for (int i = 0; i < RANGE; ++i){
-        copy_tally(blank, col_tally[i]);
-        copy_tally(blank, row_tally[i]);
-        copy_tally(blank, box_tally[i]);
-    }
-    accounting();
-    */
+    // Default view is "bare"
     int view = 0;
 
     if (argc == 1) {
@@ -234,39 +224,29 @@ void print_grid(void) {
 /* DEFINE YOUR OWN FUNCTIONS HERE ********************************************/
 
 /**
- * Fill in the row/col_tally[] arrays
+ * Fill in the row/col/box_tally[] arrays which track the empty cells in each.
  */
-void accounting(void) {
+void tally_accounting(void) {
     for (int i = 0; i < RANGE; ++i) // row
         for (int j = 0; j < RANGE; ++j) // column
-            if(grid[i][j][VALUE] > 0)
-                update(i, j, grid[i][j][VALUE]);
+            if(grid[i][j][VALUE] == 0)
+                update_tallys(i, j);
 }
 /**
  * Given a row and column, returns a box number for indexing into the 
  * box_tally[] global. Assume row & column are zero indexed.
  */ 
 int box_id(int row, int column) {
-    return (row / BOX_SIZE) * (column / BOX_SIZE);
+    return (row / BOX_SIZE * BOX_SIZE) + (column / BOX_SIZE);
 }
 
 /**
- * Update the tallys
+ * Update the tallys of empty cells
  */
-void update(int col, int row, int value) {
-    row_tally[row][++row_tally[row][0]] = value;
-    col_tally[col][++col_tally[col][0]] = value;
-    box_tally[box_id(row, col)][box_tally[box_id(row, col)][0]] = value;
-}
-
-/**
- * Check weather a number is in a given tally
- */
-bool in_tally(int number, int tally[]) {
-    for (int i = 1; i <= tally[0]; ++i)
-        if (tally[i] == number)
-            return true;
-    return false;
+void update_tallys(int col, int row) {
+    row_tally[row][++row_tally[row][0]] = col;
+    col_tally[col][++col_tally[col][0]] = row;
+    box_tally[box_id(row, col)][box_tally[box_id(row, col)][0]] = row * BOX_SIZE + col;
 }
 
 /**
@@ -360,18 +340,106 @@ unsigned get_numbers(int row_start, int row_end, int col_start, int col_end) {
     return domain;
 }
 
-void copy_tally(int from[], int to[]) {
-    for (int i = 0; i <= RANGE; ++i)
-        to[i] = from[i];
-}
-
 void mark() {
     domain_diminution();
 }
 
-void work() {
-    printf("work me!");
+/**
+ * Look for a premptive set with the given numbers
+ */ 
+bool check_preemptive_set(unsigned preemptive_set, int row, int col) {
+    bool set_found = false;
+    int size = count_bits(preemptive_set);
+    if (size) {
+        int row_start = 0;
+        int row_end = RANGE;
+        int col_start = 0;
+        int col_end = RANGE;
+        if(row && col) {
+            // we're looking in a box
+            row_start = row / BOX_SIZE * BOX_SIZE;
+            row_end = row_start + BOX_SIZE;
+            col_start = col / BOX_SIZE * BOX_SIZE;
+            col_end = col_start + BOX_SIZE;
+        } else if (row) {
+            // Row
+            row_start = row;
+            row_end = row + 1;
+        }
+        else {
+            // Column
+            col_start = col;
+            col_end = col + 1;
+        }
+        // Check All bits within the pre-emptive set & we have the right amount of cells.
+        int count = 0;
+        for (int r = row_start; r < row_end; ++r)
+            for (int c = col_start; c < col_end; ++r) 
+                if((grid[r][c][DOMAIN] & ~preemptive_set) == 0) 
+                    count++;
+        if (count == size)
+            // We found one! so remove from cells not in the set
+            for (int r = row_start; r < row_end; ++r)
+                for (int c = col_start; c < col_end; ++r)
+                    if(grid[r][c][DOMAIN] & ~preemptive_set) {
+                        set_found = true;
+                        grid[r][c][DOMAIN] &= ~preemptive_set;
+                    }
+    }
+    return set_found;
 }
+
+/**
+ * Recurvily build a Power Set, of all elements of length k, from the the bits in 
+ * the domain set. These will be our preemptive sets.
+ * Returns true if it found a pre-emptive set, false otherwise.
+ */
+bool build_preemptive_sets(unsigned domain, unsigned element, int k, int row, int col) {
+    if(k > 0) {
+        unsigned available_bits = domain;
+        // Find next bit
+        int i = 1;
+        while (i <= RANGE) {
+            if(available_bits & 1) {
+                domain ^= 1 << i;  // remove bit
+                build_preemptive_sets(domain, element | 1 << i, k - 1, row, col);
+            }
+            available_bits >>= 1;
+            i++;
+        }
+    }
+    else
+        // Reached the premtive set size we are after so use it!
+        return check_preemptive_set(element, row, col);
+
+    return false;
+}
+
+void work() {
+    bool set_found = false;
+    tally_accounting();
+//    int tallys[] = { row_tally, col_tally, box_tally };
+    // Row pre-emptive sets...
+    for (int r = 0; r < RANGE; ++r) {
+        int number_of_empties = row_tally[r][0];
+        if(number_of_empties - 1 > 0) {
+            unsigned domain = 0;
+            for(int x = 1; x <= row_tally[r][0]; ++x)
+                domain |= grid[row_tally[r][x]][x][DOMAIN];
+            // Start with smallest pre-emptive set and go up.
+            for(int size = 2; size <= number_of_empties - 1; ++size)
+                set_found = build_preemptive_sets(domain, 0, size, r, 0);
+        }
+    }
+    // TODO: copy the above for columns and boxes!
+    if(set_found) {
+        // TODO:
+        // Check for forced.
+        // Check if we have solved it.
+        // work(); // again!
+    }
+}
+
 
 /**
  * Output latex representation of the grid
