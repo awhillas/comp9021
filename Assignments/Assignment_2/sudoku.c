@@ -64,9 +64,14 @@
 
 #define RANGE 9
 #define BOX_SIZE 3
-// IN dexes into grid[][] global
+// Indexes into grid[][][] global
 #define VALUE 0
 #define DOMAIN 1
+#define CROSSED 2
+// Constants for where we are searching. See *_preemptive_set()
+#define ROW 0
+#define COLUMN 1
+#define BOX 2
 
 bool get_input(void);
 bool looks_ok(void);
@@ -74,8 +79,8 @@ void print_grid(void);
 
 /* ADD FUNCTION PROTOTYPES AND GLOBAL VARIABLES */
 
-// Track square solutions onw for VALUE and one for DOMAIN.
-unsigned grid[RANGE][RANGE][2];
+// Track cell VALUE, DOMAIN and WORKED domain
+unsigned grid[RANGE][RANGE][3];
 // Tally of rows and columns, with the 1st element the count of numbers in that 
 // row/column and then the actual numbers following that. For quick refence. The
 // accounting() function fills in (updates) these arrays.
@@ -103,6 +108,7 @@ void latex_footer(void);
 
 void domain_diminution(void);
 unsigned get_numbers(int, int, int, int); 
+bool seek_preemptive_set(int , int [RANGE][RANGE + 1]);
 
 int main(int argc, char **argv) {
     if (argc > 2 || (argc == 2 &&
@@ -121,8 +127,10 @@ int main(int argc, char **argv) {
     
     /* POSSIBLY ADD SOME CODE HERE */
     for (int i = 0; i < RANGE; ++i)
-        for (int j = 0; j < RANGE; ++j)
+        for (int j = 0; j < RANGE; ++j) {
             grid[i][j][DOMAIN] = !0;
+            grid[i][j][CROSSED] = 0;
+        }
     // Default view is "bare"
     int view = 0;
 
@@ -243,7 +251,7 @@ int box_id(int row, int column) {
 /**
  * Update the tallys of empty cells
  */
-void update_tallys(int col, int row) {
+void update_tallys(int row, int col) {
     row_tally[row][++row_tally[row][0]] = col;
     col_tally[col][++col_tally[col][0]] = row;
     box_tally[box_id(row, col)][box_tally[box_id(row, col)][0]] = row * BOX_SIZE + col;
@@ -283,24 +291,23 @@ void insert(int row, int col, int number) {
     grid[row][col][VALUE] = number;
 }
 /**
- * Counts the number of bits in a int
+ * Counts the number of 1's in the first RANGE bits 
  */
 unsigned count_bits(unsigned n) {
-    unsigned count = 0;
-    while(n) {
-        count += n & 1;
-        n >>= 1;
-    }
+    int count = 0;
+    for(int i = 0; i < RANGE; ++i)
+        if(n & 1 << i)
+            count++;
     return count;
 }
 /**
  * Takes the highest bit and converts it to an int
  */
 int bit_to_number(unsigned n) {
-    int count = 0;
-    while(n >>= 1)
-        count++;
-    return count + 1;
+    for(int i = 0; i < RANGE; ++i)
+        if(n & 1 << i)
+            return i + 1;
+    return 0;
 }
 
 /**
@@ -345,9 +352,17 @@ void mark() {
 }
 
 /**
+ * Remove the given bits from the domain and move to the CROSSED out domain
+ */
+void cross_out(int row, int col, unsigned preemptive_set) {
+    grid[row][col][CROSSED] |= grid[row][col][DOMAIN] & preemptive_set;  // add
+    grid[row][col][DOMAIN] &= ~preemptive_set;  // remove
+}
+
+/**
  * Look for a premptive set with the given numbers
  */ 
-bool check_preemptive_set(unsigned preemptive_set, int row, int col) {
+bool check_preemptive_set(unsigned preemptive_set, int what, int where) {
     bool set_found = false;
     int size = count_bits(preemptive_set);
     if (size) {
@@ -355,35 +370,41 @@ bool check_preemptive_set(unsigned preemptive_set, int row, int col) {
         int row_end = RANGE;
         int col_start = 0;
         int col_end = RANGE;
-        if(row && col) {
-            // we're looking in a box
-            row_start = row / BOX_SIZE * BOX_SIZE;
-            row_end = row_start + BOX_SIZE;
-            col_start = col / BOX_SIZE * BOX_SIZE;
-            col_end = col_start + BOX_SIZE;
-        } else if (row) {
-            // Row
-            row_start = row;
-            row_end = row + 1;
+        switch(what) {
+            case BOX:
+                // in the case of BOX, 'where' is a box_id
+                row_start = where / BOX_SIZE * BOX_SIZE;
+                row_end = row_start + BOX_SIZE;
+                col_start = where % BOX_SIZE * BOX_SIZE;
+                col_end = col_start + BOX_SIZE;
+                break;
+            case ROW:
+                row_start = where;
+                row_end = where + 1;
+                break;
+            case COLUMN:
+                col_start = where;
+                col_end = where + 1;
         }
-        else {
-            // Column
-            col_start = col;
-            col_end = col + 1;
-        }
-        // Check All bits within the pre-emptive set & we have the right amount of cells.
+        // Check all bits within the preemptive set & that we have the right amount of cells.
         int count = 0;
         for (int r = row_start; r < row_end; ++r)
-            for (int c = col_start; c < col_end; ++r) 
-                if((grid[r][c][DOMAIN] & ~preemptive_set) == 0) 
-                    count++;
+            for (int c = col_start; c < col_end; ++c)
+                if(grid[r][c][VALUE] == 0)
+                    if(count_bits(grid[r][c][DOMAIN] & ~preemptive_set) == 0) 
+                        count++;
         if (count == size)
             // We found one! so remove from cells not in the set
             for (int r = row_start; r < row_end; ++r)
-                for (int c = col_start; c < col_end; ++r)
-                    if(grid[r][c][DOMAIN] & ~preemptive_set) {
+                for (int c = col_start; c < col_end; ++c)
+                    if(grid[r][c][VALUE] == 0 && (grid[r][c][DOMAIN] & ~preemptive_set)) {
+                        cross_out(r, c, preemptive_set);
                         set_found = true;
-                        grid[r][c][DOMAIN] &= ~preemptive_set;
+                        // We found a singleton!
+                        if(count_bits(grid[r][c][DOMAIN]) == 1) {
+                            insert(r, c, bit_to_number(grid[r][c][DOMAIN]));
+                            cross_out(r, c, grid[r][c][DOMAIN]);
+                        }
                     }
     }
     return set_found;
@@ -392,17 +413,20 @@ bool check_preemptive_set(unsigned preemptive_set, int row, int col) {
 /**
  * Recurvily build a Power Set, of all elements of length k, from the the bits in 
  * the domain set. These will be our preemptive sets.
- * Returns true if it found a pre-emptive set, false otherwise.
+ * What is one of ROW, COLUMN or BOX constants.
+ * Where is the number coresponding to those constants.
+ * Returns true if a pre-emptive set is found, false otherwise.
  */
-bool build_preemptive_sets(unsigned domain, unsigned element, int k, int row, int col) {
+bool build_preemptive_sets(unsigned domain, unsigned element, int k, int what, int where) {
+    bool result = false;
     if(k > 0) {
         unsigned available_bits = domain;
         // Find next bit
-        int i = 1;
+        int i = 0;
         while (i <= RANGE) {
             if(available_bits & 1) {
                 domain ^= 1 << i;  // remove bit
-                build_preemptive_sets(domain, element | 1 << i, k - 1, row, col);
+                result |= build_preemptive_sets(domain, element | 1 << i, k - 1, what, where);
             }
             available_bits >>= 1;
             i++;
@@ -410,33 +434,44 @@ bool build_preemptive_sets(unsigned domain, unsigned element, int k, int row, in
     }
     else
         // Reached the premtive set size we are after so use it!
-        return check_preemptive_set(element, row, col);
+        return check_preemptive_set(element, what, where);
 
-    return false;
+    return result;
+}
+
+unsigned get_total_domain(int tally[RANGE + 1]) {
+    unsigned domain = 0;
+    for(int x = 1; x <= tally[0]; ++x)
+        domain |= grid[x][tally[x]][DOMAIN];
+    return domain;
+}
+
+/**
+ * Loop thought an empty cell tally and check for preemptive sets in rows, columns and boxes
+ */
+bool seek_preemptive_set(int what, int tallys[RANGE][RANGE + 1]) {
+    bool set_found = false;
+    for (int i = 0; i < RANGE; ++i) {
+        int number_of_empties = tallys[i][0];
+        //if(number_of_empties > 2 && number_of_empties < 9) {
+            for(int size = 2; size <= number_of_empties - 1; ++size)
+                set_found = build_preemptive_sets(get_total_domain(tallys[i]), 0, size, what, i);
+        //}
+    }
+    return set_found;
 }
 
 void work() {
-    bool set_found = false;
     tally_accounting();
-//    int tallys[] = { row_tally, col_tally, box_tally };
-    // Row pre-emptive sets...
-    for (int r = 0; r < RANGE; ++r) {
-        int number_of_empties = row_tally[r][0];
-        if(number_of_empties - 1 > 0) {
-            unsigned domain = 0;
-            for(int x = 1; x <= row_tally[r][0]; ++x)
-                domain |= grid[row_tally[r][x]][x][DOMAIN];
-            // Start with smallest pre-emptive set and go up.
-            for(int size = 2; size <= number_of_empties - 1; ++size)
-                set_found = build_preemptive_sets(domain, 0, size, r, 0);
-        }
-    }
-    // TODO: copy the above for columns and boxes!
-    if(set_found) {
+    bool found = false;
+    found |= seek_preemptive_set(ROW, row_tally);
+    found |= seek_preemptive_set(COLUMN, col_tally); 
+    found |= seek_preemptive_set(BOX, box_tally);
+    if(found) {
         // TODO:
         // Check for forced.
         // Check if we have solved it.
-        // work(); // again!
+        work(); // again!
     }
 }
 
@@ -463,10 +498,14 @@ void latex_table(int view) {
                 // Print the marks in the corners
                 printf("{");
                 unsigned domain = grid[r][c][DOMAIN];
+                unsigned crossed = grid[r][c][CROSSED];
                 for (int i = 1; i <= RANGE; ++i) {
                     if (domain & 1)
                         printf("%d ", i);
+                    if (crossed & 1)
+                        printf("\\cancel{%d} ", i);
                     domain >>= 1;
+                    crossed >>= 1;
                     if(i % 2 == 0 && i != 8)
                         printf("}{");
                 }
@@ -509,8 +548,7 @@ void latex_header() {
         "\\begin{document}\n\n"
         "\\tikzset{every node/.style={minimum size=.5cm}}\n\n"
         "\\begin{center}\n"
-        "\\begin{tabular}{||@{}c@{}|@{}c@{}|@{}c@{}||@{}c@{}|@{}c@{}|@{}c@{}||@{}c@{}|@{}c@{}|@{}c@{}||}\\hline\\hline"
-    ;
+        "\\begin{tabular}{||@{}c@{}|@{}c@{}|@{}c@{}||@{}c@{}|@{}c@{}|@{}c@{}||@{}c@{}|@{}c@{}|@{}c@{}||}\\hline\\hline";
     printf("%s", header);
 }
 
@@ -518,8 +556,7 @@ void latex_footer() {
     char footer[] =
         "\\end{tabular}\n"
         "\\end{center}\n\n"
-        "\\end{document}"
-    ;
+        "\\end{document}";
     printf("%s", footer);
 }
  
