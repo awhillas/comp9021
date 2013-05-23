@@ -2,6 +2,7 @@
 *.c~
 *.aux
 *.dSYM
+a.out
 
 # Object files
 *.o
