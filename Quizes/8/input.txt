@@ -1,0 +1,23 @@
+
+
+  The working directory is     supposed
+to contain a file named input.txt.
+
+A file named output.txt is created and all words in input.txt are
+
+  written in output.txt, one per line: FIRST the first one, THEN the last one,
+ THEN the second one,
+THEN the penultimate one, etc.
+
+As usual, a word is a sequence of (lowercase or uppercase) letters
+of maximal length. Here*(^are_()some$^&*$%@words<>?separated
+
+678by#@$%&*87other)*(characters>>>>>>>>>>than_+)_)
+
+
+
+     spaces!!
+
+DO NOT TRY AND STORE THE WORDS IN AN ARRAY, OUTPUT THEM ON THE FLY!!!
+
+
