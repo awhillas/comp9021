@@ -1,0 +1,11 @@
+One evening as you are out for a stroll, you walk by a doorway labeled no normals allowed18.
+Case 0b: Then I met Sir Number01 who introduced me to his wife and told me: "at least one of Sir Number02 and I is a Knave."
+Case 1a: Sir Number03 said "At most one of Sirs Number04, Number05 and Number06 is a Knight."
+Case 1b: Sir Number07 said "At most one of Sirs Number08, Number09, Number10 and I is a Knave."
+Case 2: "Exactly one of us is a Knight," replies Sir Number11.
+Case 3: Sir Number12 said "all of us are Knights?"
+Case 4: "I am a Knight," replies Sir Number13!
+Case 5: Sir Number14 said "Sir Number15 is a Knave."
+Case 6: Sir Number16 then said "Sirs Number17, Number18, Number19, Number20 or Number21 is a Knight!"
+Case 7b: I asked Sir Number22 who he was, and he answered impatiently: "Sir Number23 and I are Knaves!"
+Who is a Knight, and who is a Knave?
